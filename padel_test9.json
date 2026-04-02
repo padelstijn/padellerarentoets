@@ -1,0 +1,9 @@
+{
+  "test9": [
+    { "question": "Wat is focus?", "options": ["Concentratie", "Chaos", "Afleiding", "Stress"], "correct": "Concentratie" },
+    { "question": "Waar of niet waar: Mentale kracht is belangrijk.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "What is pressure?", "options": ["Stress situation", "Relaxation", "Fun", "Warmup"], "correct": "Stress situation" },
+    { "question": "Wat helpt bij stress?", "options": ["Ademhaling", "Paniek", "Chaos", "Stop"], "correct": "Ademhaling" },
+    { "question": "Wat is zelfvertrouwen?", "options": ["Geloof in jezelf", "Twijfel", "Stress", "Chaos"], "correct": "Geloof in jezelf" }
+  ]
+}
