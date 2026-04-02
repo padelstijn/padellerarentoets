@@ -1,0 +1,9 @@
+{
+  "test6": [
+    { "question": "Wat is een service fout?", "options": ["Net raken", "In vak landen", "Correct slaan", "Lob"], "correct": "Net raken" },
+    { "question": "Waar of niet waar: Serve moet onderhands.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "What is accuracy?", "options": ["Precision", "Power", "Speed", "Luck"], "correct": "Precision" },
+    { "question": "Wat helpt bij service?", "options": ["Routine", "Chaos", "Geen focus", "Snelheid"], "correct": "Routine" },
+    { "question": "Waar of niet waar: Serve bepaalt vaak het punt.", "options": ["Waar", "Niet waar"], "correct": "Waar" }
+  ]
+}
