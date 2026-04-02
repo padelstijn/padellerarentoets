@@ -5,120 +5,118 @@
 <title>Padel Leraren Toets</title>
 <style>
 body { font-family: Arial, sans-serif; margin: 20px; }
-h1,h2 { color: #2c3e50; }
-button { margin: 5px; padding: 8px 12px; }
-#testContainer { margin-top: 20px; }
-.question { margin-bottom: 15px; }
-.options label { margin-right: 15px; }
-#timer { font-weight: bold; margin-bottom: 10px; }
+h1 { text-align: center; }
+#testButtons button { margin: 2px; }
+.question { margin: 10px 0; }
+.options label { display: block; margin: 3px 0; }
 </style>
 </head>
 <body>
 
 <h1>Padel Leraren Toets</h1>
+
 <div>
   <label>Naam: <input type="text" id="naam"></label>
-  <label>Email: <input type="text" id="email"></label>
-  <label>Tel: <input type="text" id="tel"></label>
+  <label>Email: <input type="email" id="email"></label>
+  <label>Telefoon: <input type="tel" id="tel"></label>
   <label>Geboortedatum: <input type="date" id="dob"></label>
-  <button id="importBtn">Import .txt</button>
 </div>
 
-<div id="testSelect">
-  <h2>Selecteer Test</h2>
-  <div id="testButtons"></div>
+<div id="testButtons">
+  <h3>Selecteer Test:</h3>
+  <button onclick="loadTest(1)">Test 1</button>
+  <button onclick="loadTest(2)">Test 2</button>
+  <button onclick="loadTest(3)">Test 3</button>
+  <button onclick="loadTest(4)">Test 4</button>
+  <button onclick="loadTest(5)">Test 5</button>
+  <button onclick="loadTest(6)">Test 6</button>
+  <button onclick="loadTest(7)">Test 7</button>
+  <button onclick="loadTest(8)">Test 8</button>
+  <button onclick="loadTest(9)">Test 9</button>
+  <button onclick="loadTest(10)">Test 10</button>
 </div>
 
-<div id="timer">Tijd: 00:00</div>
-<div id="testContainer"></div>
-<button id="submitBtn">Verstuur Antwoorden</button>
-<button id="exportBtn">Export .txt</button>
+<div id="timer"></div>
+<div id="questions"></div>
+<button onclick="calculateResult()">Bereken Resultaat</button>
+<button onclick="exportTxt()">Export .txt</button>
+<input type="file" id="importFile" onchange="importTxt(event)">
 
 <script>
-// --- Configuratie ---
-const totalTests = 10;
-const baseUrl = "https://padelstijn.github.io/padellerarentoets/padel_test";
-
-// --- State ---
-let currentTestNum = 1;
 let tests = [];
-let timerInterval, seconds = 0;
+let currentTestNum = 0;
+let timerInterval;
+let timeLeft = 3000; // 50 min = 3000 sec
 let student = {};
 
-// --- Timer functies ---
 function startTimer() {
   clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    seconds++;
-    const min = String(Math.floor(seconds/60)).padStart(2,'0');
-    const sec = String(seconds%60).padStart(2,'0');
-    document.getElementById("timer").innerText = `Tijd: ${min}:${sec}`;
-  }, 1000);
+  timerInterval = setInterval(()=>{
+    const min = Math.floor(timeLeft/60);
+    const sec = timeLeft % 60;
+    document.getElementById("timer").textContent = `Tijd over: ${min}:${sec.toString().padStart(2,'0')}`;
+    if(timeLeft <= 0){ clearInterval(timerInterval); alert("Tijd is om!"); }
+    timeLeft--;
+  },1000);
 }
 
-function pauseTimer() {
-  clearInterval(timerInterval);
+function loadTest(num){
+  currentTestNum = num;
+  fetch(`padel_test${num}.json`)
+    .then(resp=>resp.json())
+    .then(data=>{
+      tests = data[`test${num}`];
+      displayQuestions();
+      timeLeft = 3000; // reset timer
+      startTimer();
+    }).catch(e=>alert("Kon test niet laden: "+e));
 }
 
-// --- Test knoppen dynamisch ---
-function createTestButtons() {
-  const container = document.getElementById("testButtons");
-  container.innerHTML = '';
-  for(let i=1;i<=totalTests;i++){
-    const btn = document.createElement("button");
-    btn.innerText = "Test " + i;
-    btn.addEventListener("click", ()=>loadTest(i));
-    container.appendChild(btn);
-  }
-}
-
-// --- Laad JSON test ---
-async function loadTest(testNum) {
-  currentTestNum = testNum;
-  seconds = 0;
-  startTimer();
-  const res = await fetch(`${baseUrl}${testNum}.json`);
-  const data = await res.json();
-  const key = Object.keys(data)[0];
-  tests = data[key];
-  renderTest();
-}
-
-// --- Render de test ---
-function renderTest() {
-  const container = document.getElementById("testContainer");
-  container.innerHTML = '';
+function displayQuestions(){
+  const qDiv = document.getElementById("questions");
+  qDiv.innerHTML = "";
   tests.forEach((q,i)=>{
     const div = document.createElement("div");
-    div.className = "question";
-    div.innerHTML = `<p>${i+1}. ${q.question}</p>`;
-    const opts = q.options.map(opt =>
-      `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`
-    ).join('');
-    div.innerHTML += `<div class="options">${opts}</div>`;
-    container.appendChild(div);
+    div.className="question";
+    div.innerHTML=`<strong>${i+1}. ${q.question}</strong>`;
+    const optsDiv = document.createElement("div");
+    optsDiv.className="options";
+    q.options.forEach(opt=>{
+      const id=`q${i}_${opt}`;
+      optsDiv.innerHTML += `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`;
+    });
+    div.appendChild(optsDiv);
+    qDiv.appendChild(div);
   });
 }
 
-// --- Bereken resultaat ---
+// --- Bereken resultaat inclusief fouten ---
 function calculateResult() {
   let score = 0;
+  let wrong = 0;
+  let unanswered = 0;
   tests.forEach((q,i)=>{
     const opts = document.getElementsByName("q"+i);
+    let answered = false;
     opts.forEach(o=>{
       if(o.checked){
+        answered = true;
         if(o.value.trim().toLowerCase() === q.correct.trim().toLowerCase()){
           score++;
+        } else {
+          wrong++;
         }
       }
     });
+    if(!answered) unanswered++;
   });
-  const percent = Math.round((score / tests.length) * 100);
-  alert(`Score: ${score} / ${tests.length} (${percent}%)`);
-  return {score, total: tests.length, percent};
+  const totalAnswered = score + wrong;
+  const percent = totalAnswered > 0 ? Math.round((score / totalAnswered) * 100) : 0;
+  alert(`Resultaat:\nGoed: ${score}\nFout: ${wrong}\nNiet beantwoord: ${unanswered}\nPercentage goed: ${percent}%`);
+  return {score, wrong, unanswered, totalAnswered, percent};
 }
 
-// --- Export .txt met Nederlandse datum ---
+// --- Export .txt met NL datum DD/MM/YYYY ---
 function exportTxt() {
   const result = calculateResult();
   student = {
@@ -128,7 +126,7 @@ function exportTxt() {
     dob: document.getElementById("dob").value
   };
 
-  // Nederlandse datum: DD-MM-YYYY
+  // Nederlandse datum: DD/MM/YYYY
   const now = new Date();
   const dd = String(now.getDate()).padStart(2,'0');
   const mm = String(now.getMonth()+1).padStart(2,'0');
@@ -136,7 +134,7 @@ function exportTxt() {
   const hh = String(now.getHours()).padStart(2,'0');
   const min = String(now.getMinutes()).padStart(2,'0');
   const ss = String(now.getSeconds()).padStart(2,'0');
-  const formattedDate = `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;
+  const formattedDate = `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
 
   const data = {
     student,
@@ -153,38 +151,25 @@ function exportTxt() {
 }
 
 // --- Import .txt ---
-document.getElementById("importBtn").addEventListener("click", ()=>{
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".txt";
-  input.onchange = e=>{
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = ()=> {
-      try{
-        const data = JSON.parse(reader.result);
-        if(data.student){
-          student = data.student;
-          document.getElementById("naam").value = student.naam||"";
-          document.getElementById("email").value = student.email||"";
-          document.getElementById("tel").value = student.tel||"";
-          document.getElementById("dob").value = student.dob||"";
-          alert("Studentgegevens geladen!");
-        }
-      }catch(err){ alert("Fout bij inladen .txt: "+err); }
-    };
-    reader.readAsText(file);
+function importTxt(event){
+  const file = event.target.files[0];
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(data.student){
+        document.getElementById("naam").value = data.student.naam || '';
+        document.getElementById("email").value = data.student.email || '';
+        document.getElementById("tel").value = data.student.tel || '';
+        document.getElementById("dob").value = data.student.dob || '';
+        if(data.test) loadTest(data.test);
+        alert("Gegevens en test succesvol ingeladen!");
+      }
+    }catch(err){ alert("Fout bij inladen .txt: "+err); }
   };
-  input.click();
-});
-
-// --- Event listeners ---
-document.getElementById("submitBtn").addEventListener("click", calculateResult);
-document.getElementById("exportBtn").addEventListener("click", exportTxt);
-
-// --- Start ---
-createTestButtons();
-loadTest(1); // start test1 direct
+  reader.readAsText(file);
+}
 </script>
+
 </body>
 </html>
