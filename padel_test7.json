@@ -1,0 +1,9 @@
+{
+  "test7": [
+    { "question": "Wat is een rally?", "options": ["Uitwisseling slagen", "Serve", "Stop", "Punt"], "correct": "Uitwisseling slagen" },
+    { "question": "Where is control needed most?", "options": ["All shots", "Only smash", "Only serve", "None"], "correct": "All shots" },
+    { "question": "Waar of niet waar: Rust helpt herstel.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "Wat is een fout in strategie?", "options": ["Geen plan", "Aanpassen", "Observeren", "Focus"], "correct": "Geen plan" },
+    { "question": "Wat helpt bij leren?", "options": ["Feedback", "Geen uitleg", "Chaos", "Stoppen"], "correct": "Feedback" }
+  ]
+}
