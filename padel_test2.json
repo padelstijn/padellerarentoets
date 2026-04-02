@@ -1,0 +1,9 @@
+{
+  "test2": [
+    { "question": "Wat is het belangrijkste doel van een lob in padel?", "options": ["Snel punt maken", "Tegenstander naar achter dwingen", "Serve verbeteren", "Netspel vermijden"], "correct": "Tegenstander naar achter dwingen" },
+    { "question": "Waar of niet waar: Een smash wordt meestal boven schouderhoogte uitgevoerd.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "What does 'footwork' refer to?", "options": ["Racket grip", "Movement of feet", "Ball control", "Scoring"], "correct": "Movement of feet" },
+    { "question": "Welke slag gebruik je vaak na een lob van de tegenstander?", "options": ["Smash", "Serve", "Drop shot", "Return"], "correct": "Smash" },
+    { "question": "Waar of niet waar: Een goede houding begint bij gebogen knieën.", "options": ["Waar", "Niet waar"], "correct": "Waar" }
+  ]
+}
