@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <title>Padel Leraren Toets</title>
-
 <style>
 body { font-family: Arial; margin: 20px; }
-.sidebar { float:left; width:150px; }
-.content { margin-left:170px; }
-button { margin:5px; padding:10px; cursor:pointer; }
+.sidebar { float:left; width:160px; }
+.content { margin-left:180px; }
+button { margin:5px; padding:8px 12px; cursor:pointer; }
 .hidden { display:none; }
+#timer { font-weight:bold; font-size:1.2em; margin-bottom:10px; }
 </style>
-
 </head>
 <body>
 
@@ -24,8 +23,7 @@ button { margin:5px; padding:10px; cursor:pointer; }
   Email: <input id="email"><br>
   Telefoon: <input id="tel"><br>
   Geboortedatum: <input id="dob" type="date"><br>
-  <button onclick="startApp()">Start</button>
-  <br><br>
+  <button onclick="startApp()">Start</button><br><br>
   <input type="file" id="importTxt">
 </div>
 
@@ -38,37 +36,29 @@ button { margin:5px; padding:10px; cursor:pointer; }
 </div>
 
 <div class="content">
-
 <h3 id="testTitle"></h3>
 <div id="timer">50:00</div>
-
 <button onclick="pauseTimer()">Pauze</button>
 <button onclick="stopTest()">Stop</button>
 
 <div id="quiz"></div>
 
 <button onclick="submitTest()">Afronden</button>
-
 <div id="result"></div>
-
 <button onclick="exportTXT()">Export .txt</button>
-
 </div>
 </div>
 
 <script>
-
 let currentTest = 1;
 let questions = [];
 let answers = {};
 let startTime, timerInterval;
-let timeLeft = 3000;
+let timeLeft = 3000; // 50 minuten in seconden
 let paused = false;
-
 let student = {};
 
 // ================= INIT =================
-
 function startApp(){
   student = {
     naam: document.getElementById("naam").value,
@@ -76,17 +66,15 @@ function startApp(){
     tel: document.getElementById("tel").value,
     dob: document.getElementById("dob").value
   };
-
   document.getElementById("login").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
-
   createTestButtons();
 }
 
 // ================= TEST SELECTIE =================
-
 function createTestButtons(){
   const container = document.getElementById("testButtons");
+  container.innerHTML = "";
   for(let i=1;i<=10;i++){
     const btn = document.createElement("button");
     btn.innerText = "Test " + i;
@@ -100,45 +88,38 @@ function createTestButtons(){
 }
 
 // ================= JSON LADEN =================
-
 function loadJSON(){
-  const url = `padel_test${currentTest}.json`;
-
+  const url = `https://padelstijn.github.io/padellerarentoets/padel_test${currentTest}.json`;
   console.log("Loading:", url);
-
   fetch(url)
-  .then(res => res.json())
-  .then(data => {
-    questions = data["test1"]; // JSON heeft per file 1 test
-    answers = {};
-    document.getElementById("testTitle").innerText = "Test " + currentTest;
-
-    startTimer();
-    renderQuiz();
-  })
-  .catch(err => {
-    alert("Fout bij laden JSON: " + url);
-    console.error(err);
-  });
+    .then(res => res.json())
+    .then(data => {
+      questions = data["test"+currentTest]; // dynamisch key
+      if(!questions){
+        alert("JSON bevat geen test"+currentTest);
+        return;
+      }
+      answers = {};
+      document.getElementById("testTitle").innerText = "Test " + currentTest;
+      renderQuiz();
+      startTimer();
+    })
+    .catch(err => {
+      alert("Fout bij laden JSON: " + url);
+      console.error(err);
+    });
 }
 
 // ================= QUIZ =================
-
 function renderQuiz(){
   const container = document.getElementById("quiz");
   container.innerHTML = "";
-
-  questions.forEach((q, i)=>{
+  questions.forEach((q,i)=>{
     const div = document.createElement("div");
-
     div.innerHTML = `<p>${i+1}. ${q.question}</p>` +
       q.options.map(opt =>
-        `<label>
-          <input type="radio" name="q${i}" value="${opt}"
-          onchange="saveAnswer(${i}, '${opt}')"> ${opt}
-        </label><br>`
+        `<label><input type="radio" name="q${i}" value="${opt}" onchange="saveAnswer(${i}, '${opt}')"> ${opt}</label><br>`
       ).join("");
-
     container.appendChild(div);
   });
 }
@@ -148,18 +129,16 @@ function saveAnswer(i, val){
 }
 
 // ================= TIMER =================
-
 function startTimer(){
   clearInterval(timerInterval);
   timeLeft = 3000;
+  paused = false;
   startTime = new Date();
-
   timerInterval = setInterval(()=>{
     if(!paused){
       timeLeft--;
       updateTimer();
-
-      if(timeLeft <= 0){
+      if(timeLeft <=0){
         submitTest();
       }
     }
@@ -168,7 +147,7 @@ function startTimer(){
 
 function updateTimer(){
   let min = Math.floor(timeLeft/60);
-  let sec = timeLeft%60;
+  let sec = timeLeft % 60;
   document.getElementById("timer").innerText =
     `${min}:${sec.toString().padStart(2,'0')}`;
 }
@@ -178,23 +157,15 @@ function pauseTimer(){
 }
 
 // ================= RESULTAAT =================
-
 function submitTest(){
-
   clearInterval(timerInterval);
-
   let correct = 0;
-
   questions.forEach((q,i)=>{
-    if(answers[i] === q.correct){
-      correct++;
-    }
+    if(answers[i] === q.correct) correct++;
   });
-
   let total = questions.length;
   let percent = Math.round((correct/total)*100);
   let grade = (percent/10).toFixed(1);
-
   document.getElementById("result").innerHTML = `
     Goed: ${correct}/${total}<br>
     Score: ${percent}%<br>
@@ -203,7 +174,6 @@ function submitTest(){
 }
 
 // ================= STOP =================
-
 function stopTest(){
   if(confirm("Stoppen en resultaat berekenen?")){
     submitTest();
@@ -211,16 +181,13 @@ function stopTest(){
 }
 
 // ================= EXPORT =================
-
 function exportTXT(){
-
   const data = {
     student,
     test: currentTest,
     answers,
     date: new Date().toLocaleString()
   };
-
   const blob = new Blob([JSON.stringify(data)], {type:"text/plain"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -229,25 +196,18 @@ function exportTXT(){
 }
 
 // ================= IMPORT =================
-
 document.getElementById("importTxt").addEventListener("change", function(e){
-
   const file = e.target.files[0];
   const reader = new FileReader();
-
   reader.onload = function(){
     const data = JSON.parse(reader.result);
-
     student = data.student;
-
     document.getElementById("naam").value = student.naam;
     document.getElementById("email").value = student.email;
     document.getElementById("tel").value = student.tel;
     document.getElementById("dob").value = student.dob;
-
     alert("Gegevens geladen!");
   };
-
   reader.readAsText(file);
 });
 
