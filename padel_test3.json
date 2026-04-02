@@ -1,0 +1,9 @@
+{
+  "test3": [
+    { "question": "Wat betekent anticipatie in padel?", "options": ["Hard slaan", "Vooruit denken", "Langzaam spelen", "Geen beweging"], "correct": "Vooruit denken" },
+    { "question": "Where should you hit the ball for control?", "options": ["Sweet spot", "Frame", "Handle", "Top edge"], "correct": "Sweet spot" },
+    { "question": "Waar of niet waar: Positionering is belangrijker dan kracht.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "Which shot is defensive?", "options": ["Lob", "Smash", "Volley", "Drive"], "correct": "Lob" },
+    { "question": "Wat is balans belangrijk voor?", "options": ["Controle", "Krachtverlies", "Langzamer spel", "Niets"], "correct": "Controle" }
+  ]
+}
