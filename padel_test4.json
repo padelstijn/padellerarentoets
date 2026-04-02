@@ -1,0 +1,9 @@
+{
+  "test4": [
+    { "question": "Wat betekent 'timing' in padel?", "options": ["Wanneer slaan", "Waar staan", "Hoe hard slaan", "Welke grip"], "correct": "Wanneer slaan" },
+    { "question": "Waar of niet waar: Te vroeg slaan vermindert controle.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "What improves consistency?", "options": ["Repetition", "Random play", "No practice", "Luck"], "correct": "Repetition" },
+    { "question": "Welke slag is vlak en snel?", "options": ["Drive", "Lob", "Drop shot", "Slice"], "correct": "Drive" },
+    { "question": "Wat is belangrijk bij verdedigen?", "options": ["Geduld", "Haast", "Hard slaan", "Springen"], "correct": "Geduld" }
+  ]
+}
