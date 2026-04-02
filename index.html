@@ -2,284 +2,254 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<title>Padelleraren Toets</title>
+<title>Padel Leraren Toets</title>
 
 <style>
-body { font-family: Arial; margin:0; display:flex; }
-#sidebar { width:220px; background:#f0f0f0; padding:15px; }
-#main { flex:1; padding:20px; }
-
-button { margin:5px 0; width:100%; }
-.question { margin-bottom:15px; }
-#timer { font-size:20px; font-weight:bold; color:red; }
-.correct { color:green; }
-.incorrect { color:red; }
+body { font-family: Arial; margin: 20px; }
+.sidebar { float:left; width:150px; }
+.content { margin-left:170px; }
+button { margin:5px; padding:10px; cursor:pointer; }
+.hidden { display:none; }
 </style>
-</head>
 
+</head>
 <body>
 
-<!-- SIDEBAR -->
-<div id="sidebar">
-<h3>Tests</h3>
-<div id="testButtons"></div>
+<h2>Padel Leraren Toets</h2>
 
-<hr>
-<h4>Import / Export</h4>
-<button onclick="exportResults()">Download .txt</button>
-<input type="file" onchange="importResults(event)">
-<p id="importStatus"></p>
+<!-- LEERLING INFO -->
+<div id="login">
+  <h3>Gegevens</h3>
+  Naam: <input id="naam"><br>
+  Email: <input id="email"><br>
+  Telefoon: <input id="tel"><br>
+  Geboortedatum: <input id="dob" type="date"><br>
+  <button onclick="startApp()">Start</button>
+  <br><br>
+  <input type="file" id="importTxt">
 </div>
 
-<!-- MAIN -->
-<div id="main">
+<!-- APP -->
+<div id="app" class="hidden">
 
-<!-- STUDENT FORM -->
-<div id="formDiv">
-<h2>Leerlinggegevens</h2>
-
-<label>Naam:<br>
-<input type="text" id="studentName"></label><br>
-
-<label>Email:<br>
-<input type="email" id="studentEmail"></label><br>
-
-<label>Telefoon:<br>
-<input type="tel" id="studentPhone"></label><br>
-
-<label>Geboortedatum:<br>
-<input type="date" id="studentDOB"></label><br>
-
-<label>Locatie opleiding:<br>
-<input type="text" id="studentLocation"></label><br><br>
-
-<button onclick="startTest()">Start Test</button>
+<div class="sidebar">
+  <h4>Tests</h4>
+  <div id="testButtons"></div>
 </div>
 
-<!-- TEST -->
-<div id="testDiv" style="display:none;">
-<h2>Padel Toets</h2>
+<div class="content">
 
-<p>Naam: <span id="displayName"></span></p>
-<p>Test: <span id="displayTest"></span></p>
-<p>Datum: <span id="displayDate"></span></p>
+<h3 id="testTitle"></h3>
+<div id="timer">50:00</div>
 
-<p>Tijd: <span id="timer">50:00</span></p>
-<button onclick="pauseTimer()">Pauze / Hervat</button>
-<button onclick="stopTest()">Stop Test</button>
+<button onclick="pauseTimer()">Pauze</button>
+<button onclick="stopTest()">Stop</button>
 
-<form id="quiz"></form>
+<div id="quiz"></div>
 
-<p id="result"></p>
+<button onclick="submitTest()">Afronden</button>
+
+<div id="result"></div>
+
+<button onclick="exportTXT()">Export .txt</button>
+
 </div>
-
 </div>
 
 <script>
 
-// ================= DATA =================
-let studentData = {
-  name:"",
-  email:"",
-  phone:"",
-  dob:"",
-  location:"",
-  results:[]
-};
-
-let questions = [];
 let currentTest = 1;
+let questions = [];
+let answers = {};
+let startTime, timerInterval;
 let timeLeft = 3000;
-let timer;
 let paused = false;
-let startTime;
 
-// ================= INIT TEST BUTTONS =================
-for(let i=1;i<=10;i++){
-  let btn = document.createElement("button");
-  btn.innerText = "Test " + i;
-  btn.onclick = () => selectTest(i);
-  document.getElementById("testButtons").appendChild(btn);
+let student = {};
+
+// ================= INIT =================
+
+function startApp(){
+  student = {
+    naam: document.getElementById("naam").value,
+    email: document.getElementById("email").value,
+    tel: document.getElementById("tel").value,
+    dob: document.getElementById("dob").value
+  };
+
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+
+  createTestButtons();
 }
 
-// ================= SELECT TEST =================
-function selectTest(n){
-  currentTest = n;
-  alert("Geselecteerd: Test " + n);
+// ================= TEST SELECTIE =================
+
+function createTestButtons(){
+  const container = document.getElementById("testButtons");
+  for(let i=1;i<=10;i++){
+    const btn = document.createElement("button");
+    btn.innerText = "Test " + i;
+    btn.dataset.test = i;
+    btn.onclick = function(){
+      currentTest = parseInt(this.dataset.test);
+      loadJSON();
+    };
+    container.appendChild(btn);
+  }
 }
 
-// ================= LOAD JSON =================
+// ================= JSON LADEN =================
+
 function loadJSON(){
-  fetch(`/padellerarentoets/padel_test${currentTest}.json`)
+  const url = `padel_test${currentTest}.json`;
+
+  console.log("Loading:", url);
+
+  fetch(url)
   .then(res => res.json())
   .then(data => {
-    questions = data['test'+currentTest];
-    loadQuiz();
+    questions = data["test1"]; // JSON heeft per file 1 test
+    answers = {};
+    document.getElementById("testTitle").innerText = "Test " + currentTest;
+
+    startTimer();
+    renderQuiz();
   })
-  .catch(err => alert("JSON laden mislukt"));
-}
-
-// ================= LOAD QUIZ =================
-function loadQuiz(){
-  let quiz = document.getElementById("quiz");
-  quiz.innerHTML = "";
-
-  questions.forEach((q,i)=>{
-    let div = document.createElement("div");
-    div.className = "question";
-
-    div.innerHTML = `<p>${i+1}. ${q.question}</p>`;
-
-    q.options.forEach(opt=>{
-      div.innerHTML += `
-      <label>
-      <input type="radio" name="q${i}" value="${opt}"> ${opt}
-      </label><br>`;
-    });
-
-    quiz.appendChild(div);
+  .catch(err => {
+    alert("Fout bij laden JSON: " + url);
+    console.error(err);
   });
 }
 
-// ================= START TEST =================
-function startTest(){
+// ================= QUIZ =================
 
-  studentData.name = document.getElementById('studentName').value;
-  studentData.email = document.getElementById('studentEmail').value;
-  studentData.phone = document.getElementById('studentPhone').value;
-  studentData.dob = document.getElementById('studentDOB').value;
-  studentData.location = document.getElementById('studentLocation').value;
+function renderQuiz(){
+  const container = document.getElementById("quiz");
+  container.innerHTML = "";
 
-  if(!studentData.name){
-    alert("Vul naam in");
-    return;
-  }
+  questions.forEach((q, i)=>{
+    const div = document.createElement("div");
 
-  document.getElementById("displayName").innerText = studentData.name;
-  document.getElementById("displayTest").innerText = currentTest;
-  document.getElementById("displayDate").innerText = new Date().toLocaleString();
+    div.innerHTML = `<p>${i+1}. ${q.question}</p>` +
+      q.options.map(opt =>
+        `<label>
+          <input type="radio" name="q${i}" value="${opt}"
+          onchange="saveAnswer(${i}, '${opt}')"> ${opt}
+        </label><br>`
+      ).join("");
 
-  document.getElementById("formDiv").style.display="none";
-  document.getElementById("testDiv").style.display="block";
+    container.appendChild(div);
+  });
+}
 
-  startTime = new Date();
-
-  loadJSON();
-  startTimer();
+function saveAnswer(i, val){
+  answers[i] = val;
 }
 
 // ================= TIMER =================
-function startTimer(){
-  timeLeft = 3000;
 
-  timer = setInterval(()=>{
+function startTimer(){
+  clearInterval(timerInterval);
+  timeLeft = 3000;
+  startTime = new Date();
+
+  timerInterval = setInterval(()=>{
     if(!paused){
       timeLeft--;
+      updateTimer();
 
-      let m = Math.floor(timeLeft/60);
-      let s = timeLeft%60;
-
-      document.getElementById("timer").innerText =
-        `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-
-      if(timeLeft <= 0) stopTest();
+      if(timeLeft <= 0){
+        submitTest();
+      }
     }
   },1000);
+}
+
+function updateTimer(){
+  let min = Math.floor(timeLeft/60);
+  let sec = timeLeft%60;
+  document.getElementById("timer").innerText =
+    `${min}:${sec.toString().padStart(2,'0')}`;
 }
 
 function pauseTimer(){
   paused = !paused;
 }
 
-// ================= STOP TEST =================
-function stopTest(){
+// ================= RESULTAAT =================
 
-  clearInterval(timer);
+function submitTest(){
 
-  let correct=0, answered=0;
+  clearInterval(timerInterval);
+
+  let correct = 0;
 
   questions.forEach((q,i)=>{
-    let sel = document.querySelector(`input[name=q${i}]:checked`);
-    if(sel){
-      answered++;
-      if(sel.value === q.correct) correct++;
+    if(answers[i] === q.correct){
+      correct++;
     }
   });
 
-  let perc = answered ? (correct/answered)*100 : 0;
-  let grade = answered ? (correct/answered)*10 : 0;
+  let total = questions.length;
+  let percent = Math.round((correct/total)*100);
+  let grade = (percent/10).toFixed(1);
 
-  let endTime = new Date();
+  document.getElementById("result").innerHTML = `
+    Goed: ${correct}/${total}<br>
+    Score: ${percent}%<br>
+    Cijfer: ${grade}
+  `;
+}
 
-  // opslaan
-  studentData.results.push({
-    test: currentTest,
-    start: startTime.toLocaleString(),
-    end: endTime.toLocaleString(),
-    answered,
-    correct,
-    perc: perc.toFixed(1),
-    grade: grade.toFixed(1)
-  });
+// ================= STOP =================
 
-  document.getElementById("result").innerHTML =
-    `Score: ${correct}/${answered} (${perc.toFixed(1)}%) - Cijfer: ${grade.toFixed(1)}`;
+function stopTest(){
+  if(confirm("Stoppen en resultaat berekenen?")){
+    submitTest();
+  }
 }
 
 // ================= EXPORT =================
-function exportResults(){
 
-  const blob = new Blob(
-    [JSON.stringify(studentData,null,2)],
-    {type:"text/plain"}
-  );
+function exportTXT(){
 
-  let link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = studentData.name + "_padel.txt";
-  link.click();
+  const data = {
+    student,
+    test: currentTest,
+    answers,
+    date: new Date().toLocaleString()
+  };
+
+  const blob = new Blob([JSON.stringify(data)], {type:"text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "result.txt";
+  a.click();
 }
 
 // ================= IMPORT =================
-function importResults(event){
 
-  const file = event.target.files[0];
-  if(!file) return;
+document.getElementById("importTxt").addEventListener("change", function(e){
 
+  const file = e.target.files[0];
   const reader = new FileReader();
 
-  reader.onload = function(e){
+  reader.onload = function(){
+    const data = JSON.parse(reader.result);
 
-    try{
-      studentData = JSON.parse(e.target.result);
+    student = data.student;
 
-      // 👉 formulier invullen
-      document.getElementById('studentName').value = studentData.name || "";
-      document.getElementById('studentEmail').value = studentData.email || "";
-      document.getElementById('studentPhone').value = studentData.phone || "";
-      document.getElementById('studentDOB').value = studentData.dob || "";
-      document.getElementById('studentLocation').value = studentData.location || "";
+    document.getElementById("naam").value = student.naam;
+    document.getElementById("email").value = student.email;
+    document.getElementById("tel").value = student.tel;
+    document.getElementById("dob").value = student.dob;
 
-      let totaal = studentData.results.length;
-
-      // 👉 laatste test bepalen
-      let lastTest = totaal > 0 
-        ? studentData.results[totaal-1].test 
-        : 1;
-
-      currentTest = lastTest;
-
-      document.getElementById("importStatus").innerText =
-        `Welkom terug ${studentData.name}. ${totaal} test(en) geladen. Laatste test: ${lastTest}`;
-
-    }catch(err){
-      alert("Import mislukt");
-    }
-
+    alert("Gegevens geladen!");
   };
 
   reader.readAsText(file);
-}
+});
 
 </script>
 
