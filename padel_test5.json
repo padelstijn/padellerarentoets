@@ -1,0 +1,9 @@
+{
+  "test5": [
+    { "question": "Wat is het doel van een volley?", "options": ["Netspel domineren", "Verdedigen", "Serveren", "Rust"], "correct": "Netspel domineren" },
+    { "question": "Waar of niet waar: Volleys worden vóór de stuit gespeeld.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "What is coordination?", "options": ["Control of movement", "Strength", "Speed", "Luck"], "correct": "Control of movement" },
+    { "question": "Welke positie is ideaal aan het net?", "options": ["Actief", "Passief", "Achterlijn", "Zitten"], "correct": "Actief" },
+    { "question": "Wat is een fout bij volley?", "options": ["Te grote swing", "Korte beweging", "Controle", "Focus"], "correct": "Te grote swing" }
+  ]
+}
