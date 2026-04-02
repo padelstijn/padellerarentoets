@@ -4,214 +4,176 @@
 <meta charset="UTF-8">
 <title>Padel Leraren Toets</title>
 <style>
-body { font-family: Arial; margin: 20px; }
-.sidebar { float:left; width:160px; }
-.content { margin-left:180px; }
-button { margin:5px; padding:8px 12px; cursor:pointer; }
-.hidden { display:none; }
-#timer { font-weight:bold; font-size:1.2em; margin-bottom:10px; }
+body { font-family: Arial, sans-serif; margin: 20px; }
+h1,h2 { color: #2c3e50; }
+button { margin: 5px; padding: 8px 12px; }
+#testContainer { margin-top: 20px; }
+.question { margin-bottom: 15px; }
+.options label { margin-right: 15px; }
+#timer { font-weight: bold; margin-bottom: 10px; }
 </style>
 </head>
 <body>
 
-<h2>Padel Leraren Toets</h2>
-
-<!-- LEERLING INFO -->
-<div id="login">
-  <h3>Gegevens</h3>
-  Naam: <input id="naam"><br>
-  Email: <input id="email"><br>
-  Telefoon: <input id="tel"><br>
-  Geboortedatum: <input id="dob" type="date"><br>
-  <button onclick="startApp()">Start</button><br><br>
-  <input type="file" id="importTxt">
+<h1>Padel Leraren Toets</h1>
+<div>
+  <label>Naam: <input type="text" id="naam"></label>
+  <label>Email: <input type="text" id="email"></label>
+  <label>Tel: <input type="text" id="tel"></label>
+  <label>Geboortedatum: <input type="date" id="dob"></label>
+  <button id="importBtn">Import .txt</button>
 </div>
 
-<!-- APP -->
-<div id="app" class="hidden">
-
-<div class="sidebar">
-  <h4>Tests</h4>
+<div id="testSelect">
+  <h2>Selecteer Test</h2>
   <div id="testButtons"></div>
 </div>
 
-<div class="content">
-<h3 id="testTitle"></h3>
-<div id="timer">50:00</div>
-<button onclick="pauseTimer()">Pauze</button>
-<button onclick="stopTest()">Stop</button>
-
-<div id="quiz"></div>
-
-<button onclick="submitTest()">Afronden</button>
-<div id="result"></div>
-<button onclick="exportTXT()">Export .txt</button>
-</div>
-</div>
+<div id="timer">Tijd: 00:00</div>
+<div id="testContainer"></div>
+<button id="submitBtn">Verstuur Antwoorden</button>
+<button id="exportBtn">Export .txt</button>
 
 <script>
-let currentTest = 1;
-let questions = [];
-let answers = {};
-let startTime, timerInterval;
-let timeLeft = 3000; // 50 minuten in seconden
-let paused = false;
+// --- Configuratie ---
+const totalTests = 10;
+const baseUrl = "https://padelstijn.github.io/padellerarentoets/padel_test";
+
+// --- State ---
+let currentTestNum = 1;
+let tests = [];
+let timerInterval, seconds = 0;
 let student = {};
 
-// ================= INIT =================
-function startApp(){
+// --- Timer functies ---
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    seconds++;
+    const min = String(Math.floor(seconds/60)).padStart(2,'0');
+    const sec = String(seconds%60).padStart(2,'0');
+    document.getElementById("timer").innerText = `Tijd: ${min}:${sec}`;
+  }, 1000);
+}
+
+function pauseTimer() {
+  clearInterval(timerInterval);
+}
+
+// --- Test knoppen dynamisch ---
+function createTestButtons() {
+  const container = document.getElementById("testButtons");
+  container.innerHTML = '';
+  for(let i=1;i<=totalTests;i++){
+    const btn = document.createElement("button");
+    btn.innerText = "Test " + i;
+    btn.addEventListener("click", ()=>loadTest(i));
+    container.appendChild(btn);
+  }
+}
+
+// --- Laad JSON test ---
+async function loadTest(testNum) {
+  currentTestNum = testNum;
+  seconds = 0;
+  startTimer();
+  const res = await fetch(`${baseUrl}${testNum}.json`);
+  const data = await res.json();
+  // JSON structuur: test1, test2 ...
+  const key = Object.keys(data)[0];
+  tests = data[key];
+  renderTest();
+}
+
+// --- Render de test ---
+function renderTest() {
+  const container = document.getElementById("testContainer");
+  container.innerHTML = '';
+  tests.forEach((q,i)=>{
+    const div = document.createElement("div");
+    div.className = "question";
+    div.innerHTML = `<p>${i+1}. ${q.question}</p>`;
+    const opts = q.options.map(opt =>
+      `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`
+    ).join('');
+    div.innerHTML += `<div class="options">${opts}</div>`;
+    container.appendChild(div);
+  });
+}
+
+// --- Bereken resultaat ---
+function calculateResult() {
+  let score = 0;
+  tests.forEach((q,i)=>{
+    const opts = document.getElementsByName("q"+i);
+    opts.forEach(o=>{
+      if(o.checked){
+        if(o.value.trim().toLowerCase() === q.correct.trim().toLowerCase()){
+          score++;
+        }
+      }
+    });
+  });
+  const percent = Math.round((score / tests.length) * 100);
+  alert(`Score: ${score} / ${tests.length} (${percent}%)`);
+  return {score, total: tests.length, percent};
+}
+
+// --- Export .txt ---
+function exportTxt() {
+  const result = calculateResult();
   student = {
     naam: document.getElementById("naam").value,
     email: document.getElementById("email").value,
     tel: document.getElementById("tel").value,
     dob: document.getElementById("dob").value
   };
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
-  createTestButtons();
-}
-
-// ================= TEST SELECTIE =================
-function createTestButtons(){
-  const container = document.getElementById("testButtons");
-  container.innerHTML = "";
-  for(let i=1;i<=10;i++){
-    const btn = document.createElement("button");
-    btn.innerText = "Test " + i;
-    btn.dataset.test = i;
-    btn.onclick = function(){
-      currentTest = parseInt(this.dataset.test);
-      loadJSON();
-    };
-    container.appendChild(btn);
-  }
-}
-
-// ================= JSON LADEN =================
-function loadJSON(){
-  const url = `https://padelstijn.github.io/padellerarentoets/padel_test${currentTest}.json`;
-  console.log("Loading:", url);
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      questions = data["test"+currentTest]; // dynamisch key
-      if(!questions){
-        alert("JSON bevat geen test"+currentTest);
-        return;
-      }
-      answers = {};
-      document.getElementById("testTitle").innerText = "Test " + currentTest;
-      renderQuiz();
-      startTimer();
-    })
-    .catch(err => {
-      alert("Fout bij laden JSON: " + url);
-      console.error(err);
-    });
-}
-
-// ================= QUIZ =================
-function renderQuiz(){
-  const container = document.getElementById("quiz");
-  container.innerHTML = "";
-  questions.forEach((q,i)=>{
-    const div = document.createElement("div");
-    div.innerHTML = `<p>${i+1}. ${q.question}</p>` +
-      q.options.map(opt =>
-        `<label><input type="radio" name="q${i}" value="${opt}" onchange="saveAnswer(${i}, '${opt}')"> ${opt}</label><br>`
-      ).join("");
-    container.appendChild(div);
-  });
-}
-
-function saveAnswer(i, val){
-  answers[i] = val;
-}
-
-// ================= TIMER =================
-function startTimer(){
-  clearInterval(timerInterval);
-  timeLeft = 3000;
-  paused = false;
-  startTime = new Date();
-  timerInterval = setInterval(()=>{
-    if(!paused){
-      timeLeft--;
-      updateTimer();
-      if(timeLeft <=0){
-        submitTest();
-      }
-    }
-  },1000);
-}
-
-function updateTimer(){
-  let min = Math.floor(timeLeft/60);
-  let sec = timeLeft % 60;
-  document.getElementById("timer").innerText =
-    `${min}:${sec.toString().padStart(2,'0')}`;
-}
-
-function pauseTimer(){
-  paused = !paused;
-}
-
-// ================= RESULTAAT =================
-function submitTest(){
-  clearInterval(timerInterval);
-  let correct = 0;
-  questions.forEach((q,i)=>{
-    if(answers[i] === q.correct) correct++;
-  });
-  let total = questions.length;
-  let percent = Math.round((correct/total)*100);
-  let grade = (percent/10).toFixed(1);
-  document.getElementById("result").innerHTML = `
-    Goed: ${correct}/${total}<br>
-    Score: ${percent}%<br>
-    Cijfer: ${grade}
-  `;
-}
-
-// ================= STOP =================
-function stopTest(){
-  if(confirm("Stoppen en resultaat berekenen?")){
-    submitTest();
-  }
-}
-
-// ================= EXPORT =================
-function exportTXT(){
   const data = {
     student,
-    test: currentTest,
-    answers,
-    date: new Date().toLocaleString()
+    test: currentTestNum,
+    result,
+    timestamp: new Date().toISOString()
   };
-  const blob = new Blob([JSON.stringify(data)], {type:"text/plain"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "result.txt";
-  a.click();
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"text/plain"});
+  const link = document.createElement("a");
+  link.download = `padel_test${currentTestNum}_${student.naam||'leerling'}.txt`;
+  link.href = URL.createObjectURL(blob);
+  link.click();
 }
 
-// ================= IMPORT =================
-document.getElementById("importTxt").addEventListener("change", function(e){
-  const file = e.target.files[0];
-  const reader = new FileReader();
-  reader.onload = function(){
-    const data = JSON.parse(reader.result);
-    student = data.student;
-    document.getElementById("naam").value = student.naam;
-    document.getElementById("email").value = student.email;
-    document.getElementById("tel").value = student.tel;
-    document.getElementById("dob").value = student.dob;
-    alert("Gegevens geladen!");
+// --- Import .txt ---
+document.getElementById("importBtn").addEventListener("click", ()=>{
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".txt";
+  input.onchange = e=>{
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = ()=> {
+      try{
+        const data = JSON.parse(reader.result);
+        if(data.student){
+          student = data.student;
+          document.getElementById("naam").value = student.naam||"";
+          document.getElementById("email").value = student.email||"";
+          document.getElementById("tel").value = student.tel||"";
+          document.getElementById("dob").value = student.dob||"";
+          alert("Studentgegevens geladen!");
+        }
+      }catch(err){ alert("Fout bij inladen .txt: "+err); }
+    };
+    reader.readAsText(file);
   };
-  reader.readAsText(file);
+  input.click();
 });
 
-</script>
+// --- Event listeners ---
+document.getElementById("submitBtn").addEventListener("click", calculateResult);
+document.getElementById("exportBtn").addEventListener("click", exportTxt);
 
+// --- Start ---
+createTestButtons();
+loadTest(1); // start test1 direct
+</script>
 </body>
 </html>
