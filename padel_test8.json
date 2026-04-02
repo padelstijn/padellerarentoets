@@ -1,0 +1,9 @@
+{
+  "test8": [
+    { "question": "Wat is communicatie in dubbelspel?", "options": ["Samenwerking", "Alleen spelen", "Stil zijn", "Chaos"], "correct": "Samenwerking" },
+    { "question": "Waar of niet waar: Teamwork is essentieel.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "What improves teamwork?", "options": ["Communication", "Silence", "Random play", "Speed"], "correct": "Communication" },
+    { "question": "Wat is een rolverdeling?", "options": ["Taken verdelen", "Chaos", "Geen rol", "Willekeurig"], "correct": "Taken verdelen" },
+    { "question": "Wat helpt samenwerking?", "options": ["Afspraak", "Geen plan", "Chaos", "Individueel"], "correct": "Afspraak" }
+  ]
+}
