@@ -1,0 +1,9 @@
+{
+  "test10": [
+    { "question": "Wat is techniek?", "options": ["Uitvoering", "Chaos", "Random", "Geluk"], "correct": "Uitvoering" },
+    { "question": "Waar of niet waar: Techniek kan geleerd worden.", "options": ["Waar", "Niet waar"], "correct": "Waar" },
+    { "question": "What is repetition?", "options": ["Herhaling", "Stoppen", "Chaos", "Random"], "correct": "Herhaling" },
+    { "question": "Wat helpt techniek verbeteren?", "options": ["Training", "Stoppen", "Chaos", "Geen oefening"], "correct": "Training" },
+    { "question": "Wat is automatiseren?", "options": ["Zonder nadenken uitvoeren", "Chaos", "Langzaam leren", "Stoppen"], "correct": "Zonder nadenken uitvoeren" }
+  ]
+}
