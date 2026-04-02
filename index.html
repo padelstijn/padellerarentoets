@@ -79,7 +79,6 @@ async function loadTest(testNum) {
   startTimer();
   const res = await fetch(`${baseUrl}${testNum}.json`);
   const data = await res.json();
-  // JSON structuur: test1, test2 ...
   const key = Object.keys(data)[0];
   tests = data[key];
   renderTest();
@@ -119,7 +118,7 @@ function calculateResult() {
   return {score, total: tests.length, percent};
 }
 
-// --- Export .txt ---
+// --- Export .txt met Nederlandse datum ---
 function exportTxt() {
   const result = calculateResult();
   student = {
@@ -128,12 +127,24 @@ function exportTxt() {
     tel: document.getElementById("tel").value,
     dob: document.getElementById("dob").value
   };
+
+  // Nederlandse datum: DD-MM-YYYY
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const yyyy = now.getFullYear();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const min = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  const formattedDate = `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;
+
   const data = {
     student,
     test: currentTestNum,
     result,
-    timestamp: new Date().toISOString()
+    timestamp: formattedDate
   };
+
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"text/plain"});
   const link = document.createElement("a");
   link.download = `padel_test${currentTestNum}_${student.naam||'leerling'}.txt`;
