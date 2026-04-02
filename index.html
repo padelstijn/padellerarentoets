@@ -110,7 +110,7 @@ function selectTest(n){
 
 // ================= LOAD JSON =================
 function loadJSON(){
-  fetch(`padel_test${currentTest}.json`)
+  fetch(`/padellerarentoets/padel_test${currentTest}.json`)
   .then(res => res.json())
   .then(data => {
     questions = data['test'+currentTest];
