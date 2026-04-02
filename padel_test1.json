@@ -4,6 +4,11 @@
     { "question": "Waar of niet waar: De padelbal is hetzelfde als een tennisbal?", "options": ["Waar","Niet waar"], "correct": "Niet waar" },
     { "question": "Wat is het belangrijkste doel van een lob?", "options": ["Punt maken","Tegenstander naar achter","Service oefenen","Netspel vermijden"], "correct": "Tegenstander naar achter" },
     { "question": "Welke slag speel je vóór de stuit?", "options": ["Volley","Lob","Smash","Serve"], "correct": "Volley" },
-    { "question": "Waar of niet waar: Een smash is een aanvallende slag.", "options": ["Waar","Niet waar"], "correct": "Waar" }
+    { "question": "Waar of niet waar: Een smash is een aanvallende slag.", "options": ["Waar","Niet waar"], "correct": "Waar" },
+    { "question": "What does 'Vibora' mean?", "options": ["Spin shot","Serve","Lob","Drop"], "correct": "Spin shot" },
+    { "question": "Wat is een Bajada?", "options": ["Neerwaartse slag","Service","Verdediging","Drop"], "correct": "Neerwaartse slag" },
+    { "question": "Wat is fair play?", "options": ["Respect","Vals spelen","Chaos","Geen regels"], "correct": "Respect" },
+    { "question": "Wat helpt coördinatie?", "options": ["Ladder drills","Rust","Chaos","Geen training"], "correct": "Ladder drills" },
+    { "question": "Wat is timing?", "options": ["Juiste moment","Kracht","Snelheid","Bal"], "correct": "Juiste moment" }
   ]
 }
